@@ -1,7 +1,7 @@
 from __future__ import annotations
 import json
 import re
-import anthropic
+from google import genai
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.config import settings
 from backend.agents.guardrails import GuardrailChecker, BLOCKED_RESPONSE
@@ -55,12 +55,13 @@ If no results found, suggest broadening the search."""
 
 
 class PPPAgent:
-    """LangGraph-inspired conversational agent for UAE PPP project queries."""
+    """Conversational agent for UAE PPP project queries, powered by Gemini."""
 
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.guardrail = GuardrailChecker()
-        self.client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        self.client = genai.Client(api_key=settings.gemini_api_key)
+        self.model = settings.gemini_model
 
     async def run(self, message: str, session_id: str) -> dict:
         """Process a user message and return response with projects."""
@@ -127,18 +128,17 @@ class PPPAgent:
         }
 
     async def _extract_filters(self, query: str, current_filters: ConversationFilters) -> dict:
-        """Use Claude to extract structured filters from the user query."""
+        """Use Gemini to extract structured filters from the user query."""
         prompt = FILTER_EXTRACTION_PROMPT.format(
             current_filters=json.dumps(current_filters.to_dict()),
             query=query,
         )
         try:
-            response = self.client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=256,
-                messages=[{"role": "user", "content": prompt}],
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=prompt,
             )
-            content = response.content[0].text.strip()
+            content = response.text.strip()
             content = re.sub(r"^```(?:json)?\s*", "", content)
             content = re.sub(r"\s*```$", "", content)
             data = json.loads(content)
@@ -182,14 +182,13 @@ class PPPAgent:
             results_summary=results_summary,
         )
         try:
-            response = self.client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=300,
-                messages=[{"role": "user", "content": prompt}],
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=prompt,
             )
-            return response.content[0].text.strip()
+            return response.text.strip()
         except Exception as e:
             logger.warning("reply_generation_error", error=str(e))
             if count == 0:
-                return f"No projects found matching your criteria. Try broadening your search."
+                return "No projects found matching your criteria. Try broadening your search."
             return f"Found {count} project(s) matching your query."

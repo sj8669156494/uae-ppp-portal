@@ -1,19 +1,9 @@
 from __future__ import annotations
-import anthropic
+from google import genai
 from backend.config import settings
 from backend.utils.logging import get_logger
 
 logger = get_logger(__name__)
-
-ALLOWED_TOPICS = [
-    "UAE PPP projects", "UAE infrastructure", "UAE tenders",
-    "UAE government contracts", "UAE construction projects",
-    "UAE energy projects", "UAE transport projects",
-    "UAE water projects", "UAE healthcare infrastructure",
-    "UAE education infrastructure", "UAE developers/contractors",
-    "UAE airports", "UAE ports", "UAE roads", "UAE metro",
-    "UAE solar", "UAE nuclear", "UAE desalination",
-]
 
 BLOCKED_RESPONSE = (
     "I can only assist with UAE PPP and infrastructure project queries. "
@@ -37,7 +27,8 @@ class GuardrailChecker:
     """Checks if a query is in-domain for UAE PPP topics."""
 
     def __init__(self) -> None:
-        self.client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        self.client = genai.Client(api_key=settings.gemini_api_key)
+        self.model = settings.gemini_model
 
     async def is_in_domain(self, query: str) -> bool:
         """Return True if query is about UAE PPP/infrastructure, False otherwise."""
@@ -64,12 +55,11 @@ class GuardrailChecker:
 
         try:
             prompt = GUARDRAIL_PROMPT.format(query=query)
-            response = self.client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=10,
-                messages=[{"role": "user", "content": prompt}],
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=prompt,
             )
-            result = response.content[0].text.strip().lower()
+            result = response.text.strip().lower()
             return "allowed" in result
         except Exception as e:
             logger.warning("guardrail_api_error", error=str(e))

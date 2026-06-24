@@ -7,7 +7,8 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite+aiosqlite:///./uae_ppp.db"
 
-    anthropic_api_key: str = ""
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash-lite"
 
     frontend_url: str = "http://localhost:5173"
 

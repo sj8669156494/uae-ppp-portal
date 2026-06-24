@@ -2,7 +2,7 @@ from __future__ import annotations
 import json
 import re
 from typing import Optional
-import anthropic
+from google import genai
 from backend.config import settings
 from backend.utils.logging import get_logger
 
@@ -40,10 +40,11 @@ Text to extract from:
 
 
 class ProjectExtractor:
-    """Extracts structured UAE PPP project data from raw text using Claude."""
+    """Extracts structured UAE PPP project data from raw text using Gemini."""
 
     def __init__(self) -> None:
-        self.client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        self.client = genai.Client(api_key=settings.gemini_api_key)
+        self.model = settings.gemini_model
 
     async def extract(self, raw_text: str, source_url: str) -> Optional[dict]:
         """Extract project data from raw text. Returns dict or None if extraction fails."""
@@ -54,21 +55,17 @@ class ProjectExtractor:
         prompt = EXTRACTION_PROMPT.format(text=truncated)
 
         try:
-            response = self.client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=1024,
-                messages=[{"role": "user", "content": prompt}],
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=prompt,
             )
-            content = response.content[0].text.strip()
+            content = response.text.strip()
             content = re.sub(r"^```(?:json)?\s*", "", content)
             content = re.sub(r"\s*```$", "", content)
             data = json.loads(content)
             return self._validate_and_enrich(data, raw_text, source_url)
         except json.JSONDecodeError as e:
             logger.warning("extraction_json_error", error=str(e), url=source_url)
-            return None
-        except anthropic.APIError as e:
-            logger.error("extraction_api_error", error=str(e), url=source_url)
             return None
         except Exception as e:
             logger.error("extraction_error", error=str(e), url=source_url)

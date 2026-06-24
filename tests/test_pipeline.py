@@ -121,9 +121,10 @@ def test_cleaner_find_duplicate():
 @pytest.mark.asyncio
 async def test_extractor_parses_valid_json_response():
     extractor = ProjectExtractor.__new__(ProjectExtractor)
+    extractor.model = "gemini-2.5-flash-lite"
 
     mock_response = MagicMock()
-    mock_response.content = [MagicMock(text='''{
+    mock_response.text = '''{
         "name": "Dubai Solar Park Phase 5",
         "sector": "Energy",
         "emirate": "Dubai",
@@ -133,10 +134,10 @@ async def test_extractor_parses_valid_json_response():
         "contractors": "Masdar, EDF",
         "expected_completion_year": 2026,
         "confidence": 0.95
-    }''')]
+    }'''
 
     mock_client = MagicMock()
-    mock_client.messages.create.return_value = mock_response
+    mock_client.models.generate_content.return_value = mock_response
     extractor.client = mock_client
 
     result = await extractor.extract(
@@ -162,11 +163,12 @@ async def test_extractor_returns_none_for_empty_text():
 @pytest.mark.asyncio
 async def test_extractor_handles_invalid_json():
     extractor = ProjectExtractor.__new__(ProjectExtractor)
+    extractor.model = "gemini-2.5-flash-lite"
 
     mock_response = MagicMock()
-    mock_response.content = [MagicMock(text="This is not JSON at all")]
+    mock_response.text = "This is not JSON at all"
     mock_client = MagicMock()
-    mock_client.messages.create.return_value = mock_response
+    mock_client.models.generate_content.return_value = mock_response
     extractor.client = mock_client
 
     result = await extractor.extract("Some project text here", "https://example.com")
@@ -176,9 +178,10 @@ async def test_extractor_handles_invalid_json():
 @pytest.mark.asyncio
 async def test_extractor_validates_sector_enum():
     extractor = ProjectExtractor.__new__(ProjectExtractor)
+    extractor.model = "gemini-2.5-flash-lite"
 
     mock_response = MagicMock()
-    mock_response.content = [MagicMock(text='''{
+    mock_response.text = '''{
         "name": "Some Project",
         "sector": "InvalidSector",
         "emirate": "Dubai",
@@ -188,9 +191,9 @@ async def test_extractor_validates_sector_enum():
         "contractors": null,
         "expected_completion_year": null,
         "confidence": 0.6
-    }''')]
+    }'''
     mock_client = MagicMock()
-    mock_client.messages.create.return_value = mock_response
+    mock_client.models.generate_content.return_value = mock_response
     extractor.client = mock_client
 
     result = await extractor.extract("Some project info for a Dubai government infrastructure contract worth AED 1 billion.", "https://example.com")
@@ -201,8 +204,9 @@ async def test_extractor_validates_sector_enum():
 @pytest.mark.asyncio
 async def test_pipeline_clean_after_extract():
     extractor = ProjectExtractor.__new__(ProjectExtractor)
+    extractor.model = "gemini-2.5-flash-lite"
     mock_response = MagicMock()
-    mock_response.content = [MagicMock(text='''{
+    mock_response.text = '''{
         "name": "Etihad Rail Phase 2",
         "sector": "Transport",
         "emirate": "Federal",
@@ -212,9 +216,9 @@ async def test_pipeline_clean_after_extract():
         "contractors": "CRCC",
         "expected_completion_year": 2024,
         "confidence": 0.9
-    }''')]
+    }'''
     mock_client = MagicMock()
-    mock_client.messages.create.return_value = mock_response
+    mock_client.models.generate_content.return_value = mock_response
     extractor.client = mock_client
 
     raw_text = "Etihad Rail Phase 2: AED 25 billion contract awarded to CRCC in Federal"

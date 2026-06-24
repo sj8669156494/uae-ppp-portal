@@ -27,10 +27,11 @@ async def test_guardrail_allows_water_projects():
 @pytest.mark.asyncio
 async def test_guardrail_blocks_off_topic_sports():
     checker = GuardrailChecker.__new__(GuardrailChecker)
+    checker.model = "gemini-2.5-flash-lite"
     mock_response = MagicMock()
-    mock_response.content = [MagicMock(text="blocked")]
+    mock_response.text = "blocked"
     checker.client = MagicMock()
-    checker.client.messages.create.return_value = mock_response
+    checker.client.models.generate_content.return_value = mock_response
     result = await checker.is_in_domain("Who won the FIFA World Cup?")
     assert result is False
 
@@ -38,10 +39,11 @@ async def test_guardrail_blocks_off_topic_sports():
 @pytest.mark.asyncio
 async def test_guardrail_blocks_recipe_query():
     checker = GuardrailChecker.__new__(GuardrailChecker)
+    checker.model = "gemini-2.5-flash-lite"
     mock_response = MagicMock()
-    mock_response.content = [MagicMock(text="blocked")]
+    mock_response.text = "blocked"
     checker.client = MagicMock()
-    checker.client.messages.create.return_value = mock_response
+    checker.client.models.generate_content.return_value = mock_response
     result = await checker.is_in_domain("What is the best recipe for hummus?")
     assert result is False
 
