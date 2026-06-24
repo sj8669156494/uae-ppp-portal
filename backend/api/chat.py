@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from backend.db.session import get_db
 from backend.utils.logging import get_logger
-from backend.api.health import increment_query_count
+from backend.api.health import increment_query_count, increment_error_count
 
 router = APIRouter(prefix="/api", tags=["chat"])
 logger = get_logger(__name__)
@@ -36,7 +36,12 @@ async def chat(
     start = time.time()
 
     agent = PPPAgent(db=db)
-    result = await agent.run(message=request.message, session_id=session_id)
+    try:
+        result = await agent.run(message=request.message, session_id=session_id)
+    except Exception as e:
+        increment_error_count()
+        logger.error("chat_error", error=str(e), session_id=session_id)
+        raise
 
     latency_ms = (time.time() - start) * 1000
     increment_query_count()

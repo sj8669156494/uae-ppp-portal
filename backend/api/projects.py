@@ -1,6 +1,9 @@
 from __future__ import annotations
+import csv
+import io
 from typing import Optional
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from backend.db.session import get_db
@@ -70,6 +73,40 @@ async def list_projects(
         total=total,
         skip=skip,
         limit=limit,
+    )
+
+
+@router.get("/projects/export.csv")
+async def export_projects_csv(
+    sector: Optional[str] = Query(None),
+    emirate: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+) -> StreamingResponse:
+    """Download all matching projects as a CSV file."""
+    projects, _ = await crud.get_projects(
+        session=db, sector=sector, emirate=emirate, status=status, limit=1000
+    )
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "id", "name", "sector", "emirate", "owner",
+        "contract_value_aed_billions", "status", "contractors",
+        "expected_completion_year", "source_url", "source_name",
+        "extraction_confidence", "notes",
+    ])
+    for p in projects:
+        writer.writerow([
+            p.id, p.name, p.sector, p.emirate, p.owner,
+            p.contract_value_aed, p.status, p.contractors,
+            p.expected_completion_year, p.source_url, p.source_name,
+            p.extraction_confidence, p.notes,
+        ])
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=uae_ppp_projects.csv"},
     )
 
 

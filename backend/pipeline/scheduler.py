@@ -11,6 +11,8 @@ scheduler = AsyncIOScheduler()
 
 async def run_all_scrapers() -> None:
     """Run all scrapers and push results through the pipeline."""
+    from datetime import datetime, timezone
+    from backend.api.health import set_last_scraper_run
     logger.info("scraper_job_start")
     try:
         from backend.scrapers.wam import WAMScraper
@@ -43,6 +45,7 @@ async def run_all_scrapers() -> None:
                     logger.error("scraper_failed", scraper=ScraperClass.__name__, error=str(e))
     except Exception as e:
         logger.error("scraper_job_error", error=str(e))
+    set_last_scraper_run(datetime.now(timezone.utc).isoformat())
     logger.info("scraper_job_complete")
 
 
