@@ -2,7 +2,7 @@ from __future__ import annotations
 import json
 import re
 from typing import Optional
-from google import genai
+from openai import AsyncOpenAI
 from backend.config import settings
 from backend.utils.logging import get_logger
 
@@ -17,7 +17,7 @@ EXTRACTION_PROMPT = """You are a UAE infrastructure and PPP (Public-Private Part
 Extract structured information from the following text about a UAE infrastructure or PPP project.
 
 Return ONLY a valid JSON object with these exact fields:
-{{
+{
   "name": "Full project name (string, required)",
   "sector": "One of: Transport, Energy, Water, Healthcare, Education, Social, Infrastructure, Environment, Other",
   "emirate": "One of: Abu Dhabi, Dubai, Sharjah, Ras Al Khaimah, Fujairah, Ajman, Umm Al Quwain, Multiple, Federal",
@@ -27,24 +27,21 @@ Return ONLY a valid JSON object with these exact fields:
   "contractors": "Main contractor(s) as a string, or null if unknown",
   "expected_completion_year": "Year as integer (e.g., 2026), or null if unknown",
   "confidence": "Your confidence in this extraction from 0.0 to 1.0"
-}}
+}
 
 Rules:
 - Convert all monetary values to AED billions (1 billion USD ≈ 3.67 AED billion)
 - For status: look for keywords — "planned"→Planned, "tender/RFP/bid"→Tendering, "under construction/awarded/executing"→Under Execution, "complete/operational/opened"→Complete
-- If uncertain about emirate, use "Multiple" for federal projects or cross-emirate projects
-- Return ONLY valid JSON — no explanations, no markdown
-
-Text to extract from:
-{text}"""
+- If uncertain about emirate, use "Multiple" for federal/cross-emirate projects
+- Return ONLY valid JSON — no explanations, no markdown"""
 
 
 class ProjectExtractor:
-    """Extracts structured UAE PPP project data from raw text using Gemini."""
+    """Extracts structured UAE PPP project data from raw text using OpenAI."""
 
     def __init__(self) -> None:
-        self.client = genai.Client(api_key=settings.gemini_api_key)
-        self.model = settings.gemini_model
+        self.client = AsyncOpenAI(api_key=settings.openai_api_key)
+        self.model = settings.openai_model
 
     async def extract(self, raw_text: str, source_url: str) -> Optional[dict]:
         """Extract project data from raw text. Returns dict or None if extraction fails."""
@@ -52,16 +49,18 @@ class ProjectExtractor:
             return None
 
         truncated = raw_text[:4000]
-        prompt = EXTRACTION_PROMPT.format(text=truncated)
 
         try:
-            response = self.client.models.generate_content(
+            response = await self.client.chat.completions.create(
                 model=self.model,
-                contents=prompt,
+                messages=[
+                    {"role": "system", "content": EXTRACTION_PROMPT},
+                    {"role": "user", "content": f"Text to extract from:\n{truncated}"},
+                ],
+                temperature=0.1,
+                response_format={"type": "json_object"},
             )
-            content = response.text.strip()
-            content = re.sub(r"^```(?:json)?\s*", "", content)
-            content = re.sub(r"\s*```$", "", content)
+            content = response.choices[0].message.content or ""
             data = json.loads(content)
             return self._validate_and_enrich(data, raw_text, source_url)
         except json.JSONDecodeError as e:

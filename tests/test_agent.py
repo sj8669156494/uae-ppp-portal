@@ -27,11 +27,12 @@ async def test_guardrail_allows_water_projects():
 @pytest.mark.asyncio
 async def test_guardrail_blocks_off_topic_sports():
     checker = GuardrailChecker.__new__(GuardrailChecker)
-    checker.model = "gemini-2.5-flash-lite"
+    checker.model = "gpt-4o-mini"
     mock_response = MagicMock()
-    mock_response.text = "blocked"
-    checker.client = MagicMock()
-    checker.client.models.generate_content.return_value = mock_response
+    mock_response.choices[0].message.content = "blocked"
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+    checker.client = mock_client
     result = await checker.is_in_domain("Who won the FIFA World Cup?")
     assert result is False
 
@@ -39,11 +40,12 @@ async def test_guardrail_blocks_off_topic_sports():
 @pytest.mark.asyncio
 async def test_guardrail_blocks_recipe_query():
     checker = GuardrailChecker.__new__(GuardrailChecker)
-    checker.model = "gemini-2.5-flash-lite"
+    checker.model = "gpt-4o-mini"
     mock_response = MagicMock()
-    mock_response.text = "blocked"
-    checker.client = MagicMock()
-    checker.client.models.generate_content.return_value = mock_response
+    mock_response.choices[0].message.content = "blocked"
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+    checker.client = mock_client
     result = await checker.is_in_domain("What is the best recipe for hummus?")
     assert result is False
 
