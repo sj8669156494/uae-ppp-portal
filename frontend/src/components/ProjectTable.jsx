@@ -1,0 +1,101 @@
+import { ExternalLink } from 'lucide-react'
+
+const STATUS_COLORS = {
+  'Planned': 'bg-yellow-100 text-yellow-800',
+  'Tendering': 'bg-blue-100 text-blue-800',
+  'Under Execution': 'bg-green-100 text-green-800',
+  'Complete': 'bg-slate-100 text-slate-700',
+}
+
+const SECTOR_COLORS = {
+  Transport: 'bg-indigo-50 text-indigo-700',
+  Energy: 'bg-orange-50 text-orange-700',
+  Water: 'bg-cyan-50 text-cyan-700',
+  Healthcare: 'bg-red-50 text-red-700',
+  Education: 'bg-purple-50 text-purple-700',
+  Social: 'bg-pink-50 text-pink-700',
+  Infrastructure: 'bg-gray-50 text-gray-700',
+  Environment: 'bg-green-50 text-green-700',
+  Other: 'bg-slate-50 text-slate-600',
+}
+
+export function ProjectTable({ projects = [], total = 0, loading = false }) {
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="h-16 bg-slate-100 rounded-lg animate-pulse" />
+        ))}
+      </div>
+    )
+  }
+
+  if (!projects.length) {
+    return (
+      <div className="text-center py-16 text-slate-500">
+        <p className="text-lg font-medium">No projects found</p>
+        <p className="text-sm mt-1">Try adjusting your filters or search terms</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-slate-500">{total} project{total !== 1 ? 's' : ''} found</p>
+      <div className="overflow-x-auto rounded-lg border border-slate-200">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+            <tr>
+              <th className="text-left px-4 py-3">Project</th>
+              <th className="text-left px-4 py-3">Sector</th>
+              <th className="text-left px-4 py-3">Emirate</th>
+              <th className="text-left px-4 py-3">Status</th>
+              <th className="text-right px-4 py-3">Value (AED B)</th>
+              <th className="text-left px-4 py-3">Owner</th>
+              <th className="text-center px-4 py-3">Year</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {projects.map(p => (
+              <tr key={p.id} className="bg-white hover:bg-slate-50 transition-colors">
+                <td className="px-4 py-3 max-w-xs">
+                  <div className="flex items-start gap-1">
+                    <span className="font-medium text-slate-800 line-clamp-2">{p.name}</span>
+                    {p.source_url && (
+                      <a href={p.source_url} target="_blank" rel="noreferrer" className="shrink-0 text-slate-400 hover:text-blue-600 mt-0.5">
+                        <ExternalLink size={12} />
+                      </a>
+                    )}
+                  </div>
+                  {p.contractors && (
+                    <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{p.contractors}</p>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${SECTOR_COLORS[p.sector] || 'bg-slate-100 text-slate-600'}`}>
+                    {p.sector}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{p.emirate}</td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[p.status] || 'bg-gray-100 text-gray-600'}`}>
+                    {p.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right font-medium text-slate-800">
+                  {p.contract_value_aed != null ? p.contract_value_aed.toFixed(1) : '—'}
+                </td>
+                <td className="px-4 py-3 text-slate-600 text-xs max-w-xs">
+                  <span className="line-clamp-2">{p.owner}</span>
+                </td>
+                <td className="px-4 py-3 text-center text-slate-500">
+                  {p.expected_completion_year || '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
