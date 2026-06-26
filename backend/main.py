@@ -46,15 +46,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-_origins = [settings.frontend_url, "http://localhost:5173", "http://localhost:3000"]
-if settings.app_env == "production":
-    _origins.append("https://*.onrender.com")
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_origins,
-    allow_origin_regex=r"https://.*\.onrender\.com",
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
