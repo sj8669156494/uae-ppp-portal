@@ -1,3 +1,13 @@
+---
+title: UAE PPP Backend
+emoji: 🏗️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # UAE PPP Intelligence Portal
 
 An AI-powered portal for discovering, tracking, and searching UAE Public-Private Partnership and infrastructure projects.
