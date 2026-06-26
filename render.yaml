@@ -1,9 +1,8 @@
 services:
-  # Backend — FastAPI (free tier, uses SQLite)
+  # Backend — FastAPI (uses SQLite, no database needed)
   - type: web
     name: uae-ppp-backend
     runtime: python
-    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -30,7 +29,6 @@ services:
   - type: web
     name: uae-ppp-frontend
     runtime: static
-    plan: free
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     routes:
