@@ -12,11 +12,27 @@ from backend.pipeline.scheduler import start_scheduler, stop_scheduler
 logger = get_logger(__name__)
 
 
+async def _seed_if_empty() -> None:
+    """Auto-seed the DB with known projects if empty (for fresh production deployments)."""
+    from backend.db.session import AsyncSessionLocal
+    from backend.db.crud import get_stats, upsert_project
+    from scripts.seed_db import SEED_PROJECTS
+    async with AsyncSessionLocal() as session:
+        stats = await get_stats(session)
+        if stats["total_projects"] == 0:
+            logger.info("seeding_empty_database")
+            for project_data in SEED_PROJECTS:
+                await upsert_project(session, project_data)
+            await session.commit()
+            logger.info("seeding_complete", count=len(SEED_PROJECTS))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     setup_logging()
     logger.info("startup", env=settings.app_env)
     await init_db()
+    await _seed_if_empty()
     start_scheduler()
     yield
     stop_scheduler()
@@ -30,9 +46,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_origins = [settings.frontend_url, "http://localhost:5173", "http://localhost:3000"]
+if settings.app_env == "production":
+    _origins.append("https://*.onrender.com")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url, "http://localhost:5173", "http://localhost:3000"],
+    allow_origins=_origins,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
