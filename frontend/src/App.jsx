@@ -133,8 +133,15 @@ export default function App() {
                   </div>
                 ))}
               </div>
-              <div className="mt-3 text-xs text-slate-500">
-                <a href="/api/projects/export.csv" className="text-blue-600 hover:underline font-medium">⬇ Download full dataset as CSV</a>
+              <div className="mt-4">
+                <a
+                  href="/api/projects/export.csv"
+                  download="uae_ppp_projects.csv"
+                  className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                >
+                  ⬇ Download Full Dataset (CSV)
+                </a>
+                <span className="ml-3 text-xs text-slate-400">43 projects · all fields · clean schema</span>
               </div>
             </div>
 

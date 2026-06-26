@@ -41,7 +41,16 @@ export function ProjectTable({ projects = [], total = 0, loading = false }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-slate-500">{total} project{total !== 1 ? 's' : ''} found</p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-slate-500">{total} project{total !== 1 ? 's' : ''} found</p>
+        <a
+          href="/api/projects/export.csv"
+          download="uae_ppp_projects.csv"
+          className="inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+        >
+          ⬇ Export CSV
+        </a>
+      </div>
       <div className="overflow-x-auto rounded-lg border border-slate-200">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
