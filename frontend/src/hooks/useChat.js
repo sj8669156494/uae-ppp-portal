@@ -17,7 +17,8 @@ export function useChat() {
     setMessages(prev => [...prev, userMsg])
     setLoading(true)
     try {
-      const { data } = await axios.post('/api/chat', {
+      const apiBase = (typeof __API_URL__ !== 'undefined' && __API_URL__) ? `${__API_URL__}/api` : '/api'
+      const { data } = await axios.post(`${apiBase}/chat`, {
         message: text,
         session_id: sessionId,
       })

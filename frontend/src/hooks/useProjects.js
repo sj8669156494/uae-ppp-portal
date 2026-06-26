@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 
-const BASE = '/api'
+const BASE = (typeof __API_URL__ !== 'undefined' && __API_URL__) ? `${__API_URL__}/api` : '/api'
 
 export function useProjects(filters = {}) {
   const params = Object.fromEntries(
