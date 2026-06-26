@@ -1,4 +1,8 @@
 import { useState } from 'react'
+import axios from 'axios'
+
+// Bypass ngrok browser warning for all API requests
+axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'true'
 import { BarChart2, Table2, MessageSquare, Database } from 'lucide-react'
 import { StatsStrip } from './components/StatsStrip'
 import { FilterSidebar } from './components/FilterSidebar'
