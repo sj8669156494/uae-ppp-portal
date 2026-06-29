@@ -92,10 +92,6 @@ React Frontend    LangGraph AI Agent
 | RTA Dubai | Government portal | Weekly |
 | Gulf News / The National | News RSS | Daily |
 
-## Project structure
-
-See `CLAUDE.md` for full architecture and coding standards.
-
 ## Running tests
 
 ```bash
