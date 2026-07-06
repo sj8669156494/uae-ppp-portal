@@ -63,6 +63,21 @@ class Project(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
     notes = Column(Text, nullable=True)
 
+    # V2 extended fields
+    description = Column(Text, nullable=True)
+    sub_sector = Column(String(200), nullable=True)
+    responsible_entity = Column(String(500), nullable=True)
+    project_type = Column(String(200), nullable=True)
+    mode_of_implementation = Column(String(200), nullable=True)
+    ppp_type = Column(String(200), nullable=True)
+    ppp_model = Column(String(200), nullable=True)
+    requirements = Column(Text, nullable=True)
+    start_date = Column(String(20), nullable=True)
+    tender_end_date = Column(String(20), nullable=True)
+    news_link = Column(String(2000), nullable=True)
+    ministry_link = Column(String(2000), nullable=True)
+    contact_details = Column(String(1000), nullable=True)
+
     __table_args__ = (
         Index("ix_projects_sector", "sector"),
         Index("ix_projects_emirate", "emirate"),

@@ -26,6 +26,19 @@ Return ONLY a valid JSON object with these exact fields:
   "status": "One of: Planned, Tendering, Under Execution, Complete",
   "contractors": "Main contractor(s) as a string, or null if unknown",
   "expected_completion_year": "Year as integer (e.g., 2026), or null if unknown",
+  "description": "Brief description of the project scope and objectives, or null",
+  "sub_sector": "Specific sub-category (e.g. Road, Rail, Airport, Solar, Nuclear, Hospital), or null",
+  "responsible_entity": "Government ministry or authority directly responsible for oversight, or null",
+  "project_type": "One of: Greenfield, Brownfield, Expansion, Rehabilitation, or null",
+  "mode_of_implementation": "How it is delivered (e.g. Design-Build, DBOM, DBFOM, EPC, O&M), or null",
+  "ppp_type": "Type of PPP arrangement (e.g. Concession, Joint Venture, Availability Payment, Service Contract), or null",
+  "ppp_model": "PPP financial model (e.g. BOT, BOOT, BTO, DBFOT, Lease, O&M), or null",
+  "requirements": "Key technical or legal requirements mentioned, or null",
+  "start_date": "Project start date as YYYY-MM-DD, or null",
+  "tender_end_date": "Tender submission deadline as YYYY-MM-DD, or null",
+  "news_link": "URL to a relevant news article if mentioned in text, or null",
+  "ministry_link": "URL to the official ministry or department page if mentioned, or null",
+  "contact_details": "Contact name, email or phone if mentioned, or null",
   "confidence": "Your confidence in this extraction from 0.0 to 1.0"
 }
 
@@ -33,6 +46,7 @@ Rules:
 - Convert all monetary values to AED billions (1 billion USD ≈ 3.67 AED billion)
 - For status: look for keywords — "planned"→Planned, "tender/RFP/bid"→Tendering, "under construction/awarded/executing"→Under Execution, "complete/operational/opened"→Complete
 - If uncertain about emirate, use "Multiple" for federal/cross-emirate projects
+- Only extract URLs actually present in the text — do not fabricate links
 - Return ONLY valid JSON — no explanations, no markdown"""
 
 
@@ -106,6 +120,17 @@ class ProjectExtractor:
             except (TypeError, ValueError):
                 year = None
 
+        def _safe_str(key: str, max_len: int) -> Optional[str]:
+            val = data.get(key)
+            return str(val)[:max_len] if val else None
+
+        def _safe_url(key: str) -> Optional[str]:
+            val = data.get(key)
+            if not val:
+                return None
+            s = str(val).strip()
+            return s[:2000] if s.startswith("http") else None
+
         return {
             "name": name[:500],
             "sector": sector,
@@ -119,4 +144,18 @@ class ProjectExtractor:
             "source_name": "Scraped",
             "raw_text": raw_text[:10000],
             "extraction_confidence": confidence,
+            # V2 extended fields
+            "description": _safe_str("description", 5000),
+            "sub_sector": _safe_str("sub_sector", 200),
+            "responsible_entity": _safe_str("responsible_entity", 500),
+            "project_type": _safe_str("project_type", 200),
+            "mode_of_implementation": _safe_str("mode_of_implementation", 200),
+            "ppp_type": _safe_str("ppp_type", 200),
+            "ppp_model": _safe_str("ppp_model", 200),
+            "requirements": _safe_str("requirements", 5000),
+            "start_date": _safe_str("start_date", 20),
+            "tender_end_date": _safe_str("tender_end_date", 20),
+            "news_link": _safe_url("news_link"),
+            "ministry_link": _safe_url("ministry_link"),
+            "contact_details": _safe_str("contact_details", 1000),
         }

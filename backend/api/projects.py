@@ -26,6 +26,20 @@ class ProjectOut(BaseModel):
     source_name: str
     extraction_confidence: float
     notes: Optional[str]
+    # V2 extended fields
+    description: Optional[str] = None
+    sub_sector: Optional[str] = None
+    responsible_entity: Optional[str] = None
+    project_type: Optional[str] = None
+    mode_of_implementation: Optional[str] = None
+    ppp_type: Optional[str] = None
+    ppp_model: Optional[str] = None
+    requirements: Optional[str] = None
+    start_date: Optional[str] = None
+    tender_end_date: Optional[str] = None
+    news_link: Optional[str] = None
+    ministry_link: Optional[str] = None
+    contact_details: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -90,17 +104,23 @@ async def export_projects_csv(
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "id", "name", "sector", "emirate", "owner",
-        "contract_value_aed_billions", "status", "contractors",
-        "expected_completion_year", "source_url", "source_name",
-        "extraction_confidence", "notes",
+        "id", "name", "sector", "sub_sector", "emirate", "owner",
+        "responsible_entity", "contract_value_aed_billions", "status",
+        "contractors", "expected_completion_year", "project_type",
+        "mode_of_implementation", "ppp_type", "ppp_model",
+        "start_date", "tender_end_date", "source_url", "source_name",
+        "news_link", "ministry_link", "contact_details",
+        "extraction_confidence", "notes", "description",
     ])
     for p in projects:
         writer.writerow([
-            p.id, p.name, p.sector, p.emirate, p.owner,
-            p.contract_value_aed, p.status, p.contractors,
-            p.expected_completion_year, p.source_url, p.source_name,
-            p.extraction_confidence, p.notes,
+            p.id, p.name, p.sector, p.sub_sector, p.emirate, p.owner,
+            p.responsible_entity, p.contract_value_aed, p.status,
+            p.contractors, p.expected_completion_year, p.project_type,
+            p.mode_of_implementation, p.ppp_type, p.ppp_model,
+            p.start_date, p.tender_end_date, p.source_url, p.source_name,
+            p.news_link, p.ministry_link, p.contact_details,
+            p.extraction_confidence, p.notes, p.description,
         ])
     output.seek(0)
     return StreamingResponse(
