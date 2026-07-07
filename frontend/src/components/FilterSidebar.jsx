@@ -5,11 +5,47 @@ const SECTORS = ['Transport', 'Energy', 'Water', 'Healthcare', 'Education', 'Soc
 const EMIRATES = ['Abu Dhabi', 'Dubai', 'Sharjah', 'Ras Al Khaimah', 'Fujairah', 'Ajman', 'Umm Al Quwain', 'Multiple', 'Federal']
 const STATUSES = ['Planned', 'Tendering', 'Under Execution', 'Complete']
 
-export function FilterSidebar({ filters, onChange }) {
+export function FilterSidebar({ filters, onChange, compact = false }) {
   const set = (key, value) => onChange({ ...filters, [key]: value || null })
   const reset = () => onChange({ sector: null, emirate: null, status: null, min_value: null, max_value: null, search: null })
 
   const activeCount = Object.values(filters).filter(Boolean).length
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-2 flex-wrap">
+        <select
+          value={filters.sector || ''}
+          onChange={e => set('sector', e.target.value)}
+          className="text-xs border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-300 bg-white"
+        >
+          <option value="">All Sectors</option>
+          {SECTORS.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <select
+          value={filters.emirate || ''}
+          onChange={e => set('emirate', e.target.value)}
+          className="text-xs border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-300 bg-white"
+        >
+          <option value="">All Emirates</option>
+          {EMIRATES.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <select
+          value={filters.status || ''}
+          onChange={e => set('status', e.target.value)}
+          className="text-xs border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-300 bg-white"
+        >
+          <option value="">All Statuses</option>
+          {STATUSES.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+        {activeCount > 0 && (
+          <button onClick={reset} className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1">
+            <X size={12} /> Clear
+          </button>
+        )}
+      </div>
+    )
+  }
 
   return (
     <aside className="w-56 shrink-0 flex flex-col gap-5">

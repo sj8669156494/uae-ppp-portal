@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
-import { BarChart2, Table2, MessageSquare, Database } from 'lucide-react'
+import dynamic from 'next/dynamic'
+import { BarChart2, Table2, MessageSquare, Database, Map } from 'lucide-react'
 import { StatsStrip } from '../components/StatsStrip'
 import { FilterSidebar } from '../components/FilterSidebar'
 import { ProjectTable } from '../components/ProjectTable'
@@ -8,7 +9,11 @@ import { ChatPanel } from '../components/ChatPanel'
 import { AnalyticsView } from '../components/AnalyticsView'
 import { useProjects } from '../hooks/useProjects'
 
+// Leaflet uses window — must disable SSR
+const MapView = dynamic(() => import('../components/MapView'), { ssr: false })
+
 const TABS = [
+  { id: 'map', label: 'Map View', Icon: Map },
   { id: 'projects', label: 'Projects', Icon: Table2 },
   { id: 'analytics', label: 'Analytics', Icon: BarChart2 },
   { id: 'chat', label: 'AI Chat', Icon: MessageSquare },
@@ -39,7 +44,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL
   : '/api'
 
 export default function Home() {
-  const [tab, setTab] = useState('projects')
+  const [tab, setTab] = useState('map')
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
 
   const { data, isLoading } = useProjects(filters)
@@ -88,6 +93,23 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="flex-1 px-6 py-5">
+        {tab === 'map' && (
+          <div style={{ height: 'calc(100vh - 220px)' }}>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-700">UAE PPP Projects Map</h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Bubble size = contract value · Color = sector · Opacity = status · Click a bubble for details
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <FilterSidebar filters={filters} onChange={setFilters} compact />
+              </div>
+            </div>
+            <MapView projects={data?.projects || []} />
+          </div>
+        )}
+
         {tab === 'projects' && (
           <div className="flex gap-6">
             <FilterSidebar filters={filters} onChange={setFilters} />
