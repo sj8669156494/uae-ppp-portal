@@ -1,3 +1,4 @@
+'use client'
 import { useStats } from '../hooks/useProjects'
 
 export function StatsStrip() {

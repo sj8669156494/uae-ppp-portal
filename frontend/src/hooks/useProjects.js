@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 
-const BASE = (typeof __API_URL__ !== 'undefined' && __API_URL__) ? `${__API_URL__}/api` : '/api'
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api`
+  : '/api'
 
 export function useProjects(filters = {}) {
   const params = Object.fromEntries(
@@ -9,14 +11,14 @@ export function useProjects(filters = {}) {
   )
   return useQuery({
     queryKey: ['projects', params],
-    queryFn: () => axios.get(`${BASE}/projects`, { params }).then(r => r.data),
+    queryFn: () => axios.get(`${API_BASE}/projects`, { params }).then(r => r.data),
   })
 }
 
 export function useStats() {
   return useQuery({
     queryKey: ['stats'],
-    queryFn: () => axios.get(`${BASE}/stats`).then(r => r.data),
+    queryFn: () => axios.get(`${API_BASE}/stats`).then(r => r.data),
     staleTime: 60000,
   })
 }
@@ -24,7 +26,7 @@ export function useStats() {
 export function useHealth() {
   return useQuery({
     queryKey: ['health'],
-    queryFn: () => axios.get(`${BASE}/health`).then(r => r.data),
+    queryFn: () => axios.get(`${API_BASE}/health`).then(r => r.data),
     staleTime: 30000,
   })
 }

@@ -1,3 +1,4 @@
+'use client'
 import { X } from 'lucide-react'
 
 const SECTORS = ['Transport', 'Energy', 'Water', 'Healthcare', 'Education', 'Social', 'Infrastructure', 'Environment', 'Other']

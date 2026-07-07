@@ -1,15 +1,12 @@
+'use client'
 import { useState } from 'react'
-import axios from 'axios'
-
-// Bypass ngrok browser warning for all API requests
-axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'true'
 import { BarChart2, Table2, MessageSquare, Database } from 'lucide-react'
-import { StatsStrip } from './components/StatsStrip'
-import { FilterSidebar } from './components/FilterSidebar'
-import { ProjectTable } from './components/ProjectTable'
-import { ChatPanel } from './components/ChatPanel'
-import { AnalyticsView } from './components/AnalyticsView'
-import { useProjects } from './hooks/useProjects'
+import { StatsStrip } from '../components/StatsStrip'
+import { FilterSidebar } from '../components/FilterSidebar'
+import { ProjectTable } from '../components/ProjectTable'
+import { ChatPanel } from '../components/ChatPanel'
+import { AnalyticsView } from '../components/AnalyticsView'
+import { useProjects } from '../hooks/useProjects'
 
 const TABS = [
   { id: 'projects', label: 'Projects', Icon: Table2 },
@@ -37,7 +34,11 @@ const DEFAULT_FILTERS = {
   search: null,
 }
 
-export default function App() {
+const API_BASE = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api`
+  : '/api'
+
+export default function Home() {
   const [tab, setTab] = useState('projects')
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
 
@@ -65,7 +66,6 @@ export default function App() {
         <div className="text-xs text-slate-500">Powered by GPT-4o-mini</div>
       </header>
 
-      {/* Stats Strip */}
       <StatsStrip />
 
       {/* Navigation Tabs */}
@@ -115,11 +115,10 @@ export default function App() {
 
         {tab === 'sources' && (
           <div className="max-w-3xl mx-auto space-y-8">
-            {/* Sources table */}
             <div>
               <h2 className="text-lg font-semibold text-slate-700 mb-1">Data Sources</h2>
               <p className="text-sm text-slate-500 mb-4">
-                Chosen because they are the primary official UAE government portals and highest-signal news feeds for PPP/infrastructure announcements. Together they cover federal + all 7 emirates.
+                Primary official UAE government portals and highest-signal news feeds for PPP/infrastructure announcements.
               </p>
               <div className="space-y-3">
                 {DATA_SOURCES.map(s => (
@@ -139,58 +138,13 @@ export default function App() {
               </div>
               <div className="mt-4">
                 <a
-                  href="/api/projects/export.csv"
+                  href={`${API_BASE}/projects/export.csv`}
                   download="uae_ppp_projects.csv"
                   className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
                 >
                   ⬇ Download Full Dataset (CSV)
                 </a>
-                <span className="ml-3 text-xs text-slate-400">43 projects · all fields · clean schema</span>
-              </div>
-            </div>
-
-            {/* Scale & Limitations */}
-            <div>
-              <h2 className="text-lg font-semibold text-slate-700 mb-1">Scale & Where It Would Break</h2>
-              <p className="text-sm text-slate-500 mb-3">Scrapers run daily at 6am via APScheduler. Here is an honest assessment of failure points:</p>
-              <div className="space-y-2">
-                {[
-                  { risk: 'Website layout changes', impact: 'High', note: 'CSS selectors break silently. Mitigation: store raw HTML + LLM re-extracts from text, not markup.' },
-                  { risk: 'JavaScript-rendered pages', impact: 'Medium', note: 'httpx misses JS-only content. Mitigation: Playwright fallback already in BaseScraper.' },
-                  { risk: 'Rate limiting / CAPTCHA', impact: 'High', note: '2s delay + retry backoff implemented. At scale: rotating proxies + residential IPs needed.' },
-                  { risk: 'Arabic-language sources', impact: 'Medium', note: 'Not in scope v1. V2: add translation layer before LLM extraction.' },
-                  { risk: 'LLM extraction errors', impact: 'Medium', note: 'Confidence score flags < 0.7 for review. Human review queue needed at scale.' },
-                  { risk: 'Duplicate projects across sources', impact: 'Medium', note: 'rapidfuzz fuzzy match at 80% threshold. Edge case: same project with very different names.' },
-                  { risk: 'Single SQLite DB', impact: 'High at scale', note: 'Dev only. Production needs PostgreSQL + read replicas for concurrent users.' },
-                ].map(r => (
-                  <div key={r.risk} className="bg-white border border-slate-200 rounded-lg px-4 py-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-slate-800">{r.risk}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${r.impact.includes('High') ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{r.impact}</span>
-                    </div>
-                    <p className="text-xs text-slate-500">{r.note}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* What's next */}
-            <div>
-              <h2 className="text-lg font-semibold text-slate-700 mb-1">What We'd Build Next</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { title: 'More sources', desc: 'Etihad Rail, Sharjah, RAK government portals, MEED, Zawya' },
-                  { title: 'Arabic NLP', desc: 'Translate Arabic announcements before LLM extraction' },
-                  { title: 'Alerts & notifications', desc: 'Email/webhook when a new tender matches a saved filter' },
-                  { title: 'Contractor analytics', desc: 'Who is winning which sectors? Market share charts' },
-                  { title: 'Document ingestion', desc: 'Upload PDFs (tender docs, annual reports) → auto-extract projects' },
-                  { title: 'PostgreSQL + prod deploy', desc: 'Move from SQLite to PostgreSQL, deploy to cloud (AWS/Azure)' },
-                ].map(n => (
-                  <div key={n.title} className="bg-white border border-slate-200 rounded-lg px-4 py-3">
-                    <p className="text-sm font-medium text-slate-800">{n.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{n.desc}</p>
-                  </div>
-                ))}
+                <span className="ml-3 text-xs text-slate-400">43 projects · all 20 fields · clean schema</span>
               </div>
             </div>
           </div>
@@ -198,7 +152,7 @@ export default function App() {
       </main>
 
       <footer className="bg-slate-100 text-center text-xs text-slate-400 py-3 border-t border-slate-200">
-        UAE PPP Intelligence Portal · Data updated daily at 6am · Powered by GPT-4o-mini
+        UAE PPP Intelligence Portal v2 · Data updated daily at 6am · Powered by GPT-4o-mini
       </footer>
     </div>
   )

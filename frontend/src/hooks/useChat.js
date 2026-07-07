@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import axios from 'axios'
+import { API_BASE } from './useProjects'
 
 export function useChat() {
   const [messages, setMessages] = useState([
@@ -17,8 +18,7 @@ export function useChat() {
     setMessages(prev => [...prev, userMsg])
     setLoading(true)
     try {
-      const apiBase = (typeof __API_URL__ !== 'undefined' && __API_URL__) ? `${__API_URL__}/api` : '/api'
-      const { data } = await axios.post(`${apiBase}/chat`, {
+      const { data } = await axios.post(`${API_BASE}/chat`, {
         message: text,
         session_id: sessionId,
       })

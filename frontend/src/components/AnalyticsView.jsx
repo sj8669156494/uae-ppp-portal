@@ -1,3 +1,4 @@
+'use client'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import { useStats } from '../hooks/useProjects'
 
